@@ -1,0 +1,23 @@
+{
+  "name": "pair-pad",
+  "version": "1.0.0",
+  "description": "\"# Pair-Programming Interview Platform\"",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm --prefix client run dev\" \"npm --prefix server run dev\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abhiram1304/pair-pad.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/abhiram1304/pair-pad/issues"
+  },
+  "homepage": "https://github.com/abhiram1304/pair-pad#readme",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
