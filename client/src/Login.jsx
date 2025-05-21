@@ -1,20 +1,23 @@
+// client/src/Login.jsx
 import { useState } from 'react';
+import { api } from './lib/api';          
 
 export default function Login({ onAuth }) {
   const [email, setEmail] = useState('');
-  const [pwd, setPwd]   = useState('');
+  const [pwd, setPwd]     = useState('');
 
   async function handle(e) {
     e.preventDefault();
-    const res  = await fetch('/api/auth/login', {          // proxy handled by Vite :contentReference[oaicite:0]{index=0}
+
+    // 🔹 Single API call that already returns parsed JSON
+    const data = await api('/api/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pwd })
+      body: JSON.stringify({ email, password: pwd }),
     });
-    const data = await res.json();
+
     if (data.token) {
-      localStorage.setItem('token', data.token);           // browser-side storage :contentReference[oaicite:1]{index=1}
-      onAuth(true);
+      localStorage.setItem('token', data.token);  // save JWT
+      onAuth(true);                               // tell App we’re logged in
     } else {
       alert(data.error || 'Login failed');
     }
@@ -22,13 +25,17 @@ export default function Login({ onAuth }) {
 
   return (
     <form onSubmit={handle}>
-      <input  placeholder="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)} />
-      <input  type="password"
-              placeholder="password"
-              value={pwd}
-              onChange={e => setPwd(e.target.value)} />
+      <input
+        placeholder="email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="password"
+        value={pwd}
+        onChange={e => setPwd(e.target.value)}
+      />
       <button>Log in</button>
     </form>
   );
