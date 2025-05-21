@@ -11,6 +11,9 @@ const jwt       = require('jsonwebtoken');        // JWT helper    :contentRefer
 const authRoutes = require('./routes/auth');      // /api/auth/*  (created in Step 5 D)
 
 const app = express();
+const roomRoutes = require('./routes/rooms');
+app.use('/api/rooms', roomRoutes);
+
 
 /*************************************************************
  * 2. Global middleware

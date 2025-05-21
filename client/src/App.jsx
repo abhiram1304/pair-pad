@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react';
 import Login from './Login';
 import { api } from './lib/api';          // <-- NEW helper import
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Home from './pages/Home';
+import RoomPage from './pages/RoomPage';
 
 export default function App() {
   const [auth, setAuth]     = useState(() => !!localStorage.getItem('token'));
@@ -27,13 +30,23 @@ export default function App() {
   // 3. Authenticated view with secure message + Logout button
   // ================================================================
   return (
-    <div style={{ textAlign: 'center', marginTop: '4rem' }}>
-      <h2>{secret || 'Loading secure data…'}</h2>
+  <>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/room/:code" element={<RoomPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
 
-      {/* Logout clears token & flips auth state */}
-      <button onClick={() => { localStorage.removeItem('token'); setAuth(false); }}>
-          Logout 
-      </button>
-    </div>
-  );
+    {/* simple logout button */}
+    <button
+      style={{ position: 'fixed', top: 20, right: 20 }}
+      onClick={() => {
+        localStorage.removeItem('token');
+        setAuth(false);
+      }}
+    >
+      Logout
+    </button>
+  </>
+);
 }
