@@ -69,9 +69,37 @@ app.get('/api/secure', authMiddleware, (req, res) => {
 app.get('/', (_req, res) => res.send('API is up! Try /api/ping'));
 
 /*************************************************************
- * 6. Boot the server
+ * 6. Boot the server (HTTP + WebSocket)
  *************************************************************/
+const http  = require('http');
+const { Server } = require('socket.io');
+
+const srv = http.createServer(app);          // wrap Express
+const io  = new Server(srv, {
+  cors: { origin: '*' }                      // dev-only; tighten later
+});
+
+// WS events
+io.on('connection', (socket) => {
+  console.log('[ws] connected', socket.id);
+
+  // 1) join a room
+  socket.on('join-room', (code) => {
+    socket.join(code);
+    console.log(`[ws] ${socket.id} joined ${code}`);
+  });
+
+  // 2) broadcast code edits
+  socket.on('code-change', ({ code, text }) => {
+    socket.to(code).emit('code-change', text); // send to everyone else
+  });
+
+  socket.on('disconnect', () => console.log('[ws] disconnected', socket.id));
+});
+
+// listen
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () =>
-  console.log(`API server running on http://localhost:${PORT}`)
-);
+srv.listen(PORT, () => {
+  console.log(`API + WS on http://localhost:${PORT}`);
+});
+

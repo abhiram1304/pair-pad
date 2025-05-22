@@ -7,8 +7,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // forward every call that starts with /api to the Express server
       '/api': 'http://localhost:3001',
+      '/socket.io': {
+        target: 'ws://localhost:3001',
+        ws: true,
     },
+  },
   },
 });
