@@ -3,13 +3,24 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  optimizeDeps: {
-    include: ['monaco-editor'],            // <<< NEW (speeds dev start)
+
+  resolve: {
+    alias: {
+      util:    'util',
+      events:  'events',
+      process: 'process/browser',
+    },
   },
+
+  optimizeDeps: {
+    include: ['monaco-editor', 'events', 'util', 'process'],
+  },
+
   server: {
     proxy: {
-      '/api': 'http://localhost:3001',
+      '/api':        'http://localhost:3001',
       '/socket.io': { target: 'ws://localhost:3001', ws: true },
     },
   },
+  define: { global: 'globalThis' },
 });
