@@ -71,35 +71,35 @@ app.get('/', (_req, res) => res.send('API is up! Try /api/ping'));
 /*************************************************************
  * 6. Boot the server (HTTP + WebSocket)
  *************************************************************/
-const http  = require('http');
+const http = require('http');
 const { Server } = require('socket.io');
 
 const srv = http.createServer(app);          // wrap Express
 const io  = new Server(srv, {
-  cors: { origin: '*' }                      // dev-only; tighten later
+  cors: { origin: '*' },                     // dev only
 });
 
-// WS events
 io.on('connection', (socket) => {
   console.log('[ws] connected', socket.id);
 
-  // 1) join a room
+  // client says: join this room code
   socket.on('join-room', (code) => {
     socket.join(code);
-    console.log(`[ws] ${socket.id} joined ${code}`);
+    console.log(`[ws] ${socket.id} joined ${code}`); 
   });
 
-  // 2) broadcast code edits
-  socket.on('code-change', ({ code, text }) => {
-    socket.to(code).emit('code-change', text); // send to everyone else
+  // client sends code change
+  socket.on('code-change', ({ code, text, from }) => {
+    console.log('[ws] relay to room', code, 'from', from);
+    socket.to(code).emit('code-change', { text, from });
   });
 
-  socket.on('disconnect', () => console.log('[ws] disconnected', socket.id));
+  socket.on('disconnect', () => {
+    console.log('[ws] disconnected', socket.id);
+  });
 });
 
-// listen
 const PORT = process.env.PORT || 3001;
-srv.listen(PORT, () => {
-  console.log(`API + WS on http://localhost:${PORT}`);
-});
+srv.listen(PORT, () => console.log(`API + WS on http://localhost:${PORT}`));
+
 
