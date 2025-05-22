@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { socket } from '../lib/socket';
+import VideoTile from '../components/VideoTile.jsx';
+
 
 export default function RoomPage() {
   const { code } = useParams();           // room code from the URL
@@ -35,18 +37,23 @@ export default function RoomPage() {
   }
 
   return (
-    <>
-      <h2 style={{ textAlign: 'center' }}>Room {code}</h2>
-      <div style={{ height: '70vh', width: '90%', margin: '0 auto' }}>
-        <Editor
-          height="100%"
-          defaultLanguage="javascript"
-          defaultValue="// start typing…"
-          onMount={handleMount}                  // ← passes (editor, monaco)
-          onChange={handleChange}
-          theme="vs-dark"
-        />
-      </div>
-    </>
+  <>
+    <h2 style={{ textAlign: 'center' }}>Room {code}</h2>
+
+    {/* live video */}
+    <VideoTile roomCode={code} />
+
+    {/* monaco editor */}
+    <div style={{ height: '70vh', width: '90%', margin: '0 auto' }}>
+      <Editor
+        height="100%"
+        defaultLanguage="javascript"
+        defaultValue="// start typing…"
+        onMount={handleMount}
+        onChange={handleChange}
+        theme="vs-dark"
+      />
+    </div>
+  </>
   );
 }

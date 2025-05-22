@@ -94,6 +94,19 @@ io.on('connection', (socket) => {
     socket.to(code).emit('code-change', { text, from });
   });
 
+  // relay WebRTC signalling data
+  socket.on('video-ready', ({ code, from }) => {
+  console.log('[ws] video-ready from', from, 'room', code);
+  socket.to(code).emit('video-ready', { from });
+  });
+
+  socket.on('video-signal', ({ code, signal, from }) => {
+  console.log('[ws] signal from', from, 'room', code);
+  socket.to(code).emit('video-signal', { signal, from });
+  });
+
+
+
   socket.on('disconnect', () => {
     console.log('[ws] disconnected', socket.id);
   });
