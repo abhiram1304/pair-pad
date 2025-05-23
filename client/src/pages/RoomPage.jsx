@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { socket } from '../lib/socket';
 import VideoTile from '../components/VideoTile.jsx';
+import RunConsole from '../components/RunConsole';
+
 
 
 export default function RoomPage() {
@@ -53,7 +55,9 @@ export default function RoomPage() {
         onChange={handleChange}
         theme="vs-dark"
       />
+      
     </div>
+    <RunConsole roomCode={code} editorRef={editorRef} />
   </>
   );
 }
