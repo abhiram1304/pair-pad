@@ -75,9 +75,22 @@ const http = require('http');
 const { Server } = require('socket.io');
 
 const srv = http.createServer(app);          // wrap Express
+const roomUsers = new Map();
 const io  = new Server(srv, {
   cors: { origin: '*' },                     // dev only
 });
+
+// ── expose io so route files can emit to sockets ───────────
+app.set('io', io);
+
+// ── mount /api/run routes ──────────────────────────────────
+const runRoutes = require('./routes/run');  // make sure path is correct
+app.use('/api/run', runRoutes);
+
+const presignRoutes = require('./routes/presign');
+app.use('/api/presign', presignRoutes);
+
+
 
 io.on('connection', (socket) => {
   console.log('[ws] connected', socket.id);
@@ -94,6 +107,15 @@ io.on('connection', (socket) => {
     socket.to(code).emit('code-change', { text, from });
   });
 
+  /* ---- live cursor relay -------------------------------------- */
+
+  //  client -> server: "cursor-change" { room, from, position }
+  socket.on('cursor-change', ({ room, from, position }) => {
+    // forward to everyone else in the room
+    socket.to(room).emit('cursor-update', { from, position });
+  });
+
+
   // relay WebRTC signalling data
   socket.on('video-ready', ({ code, from }) => {
   console.log('[ws] video-ready from', from, 'room', code);
@@ -105,7 +127,40 @@ io.on('connection', (socket) => {
   socket.to(code).emit('video-signal', { signal, from });
   });
 
+  // client says: I joined a room
+  socket.on('presence-join', ({ room, name }) => {
+    if (!roomUsers.has(room)) roomUsers.set(room, new Map());
+    roomUsers.get(room).set(socket.id, { name, lastPing: Date.now() });
+    socket.join(room);
+    broadcast(room);
+  });
 
+  // client says: I’m still here (ping every 10 s)
+  socket.on('presence-ping', ({ room }) => {
+    const user = roomUsers.get(room)?.get(socket.id);
+    if (user) {
+      user.lastPing = Date.now();
+      broadcast(room);
+    }
+  });
+
+  // socket disconnects
+  socket.on('disconnect', () => {
+    for (const [room, users] of roomUsers) {
+      users.delete(socket.id);
+      broadcast(room);
+    }
+  });
+
+  // helper to send current list
+  function broadcast(room) {
+    const now = Date.now();
+    const users = [...roomUsers.get(room)?.values() || []].map(u => ({
+      name: u.name,
+      idle: now - u.lastPing > 30_000   // idle if 30 s no ping
+    }));
+    io.to(room).emit('presence-list', users);
+  }
 
   socket.on('disconnect', () => {
     console.log('[ws] disconnected', socket.id);

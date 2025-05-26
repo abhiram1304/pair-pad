@@ -1,17 +1,36 @@
+/* client/src/pages/Home.jsx */
 import { useNavigate } from 'react-router-dom';
-import { api } from '../lib/api';
 
 export default function Home() {
-  const nav = useNavigate();
+  const navigate = useNavigate();
 
-  async function makeRoom() {
-    const { code } = await api('/api/rooms', { method: 'POST' });
-    nav(`/room/${code}`);
+  /* create a random room and navigate there */
+  function createRoom() {
+    const code = Math.random().toString(36).substring(2, 7).toUpperCase(); // e.g. "AB12C"
+    navigate(`/room/${code}`);
   }
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-      <button onClick={makeRoom}>New Room</button>
+    <div className="min-h-screen bg-gray-900 text-gray-100 flex items-start">
+      {/* top-left toolbar */}
+      <div className="flex items-center gap-4 p-4">
+        <button
+          onClick={createRoom}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded"
+        >
+          ➕ New Room
+        </button>
+
+        <button
+          onClick={() => {
+            localStorage.removeItem('token');
+            window.location.reload();
+          }}
+          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
+        >
+          Logout
+        </button>
+      </div>
     </div>
   );
 }
