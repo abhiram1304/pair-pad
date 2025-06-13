@@ -21,3 +21,24 @@ This is the frontend of the PairPad real-time pair programming platform. Built u
 cd client
 npm install
 npm run dev
+=======
+# PairPad — Client
+
+**SPA** built with:
+
+- React 18 + Vite
+- Tailwind CSS
+- Monaco Editor (VS Code engine)
+- Firebase Web SDK (Google sign-in)
+- Heroicons / emoji UI
+- zustand (lightweight global state)
+- Socket.IO client
+
+### Key Folders
+
+| Path                     | Description                          |
+|--------------------------|--------------------------------------|
+| `src/pages/`             | Home, Login, Register, Room, etc.    |
+| `src/components/`        | VideoTile, Sidebar, Editor wrapper…  |
+| `src/lib/`               | `socket.js`, `api.js`, `firebase.js` |
+>>>>>>> 0cad048 (docs: add concise READMEs + UI polish)
