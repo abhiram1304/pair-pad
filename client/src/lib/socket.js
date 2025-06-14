@@ -1,11 +1,10 @@
-import { io } from 'socket.io-client'; 
+import { io } from "socket.io-client";
 
-// client/src/lib/socket.js
-export const socket = io('http://localhost:3001', {
+export const socket = io(import.meta.env.VITE_API_BASE, {
   autoConnect: false,
-  transports: ['websocket'],
+  transports: ["websocket"],
 });
 
 if (import.meta.env.DEV) {
-  window.socket = socket;        // ✅ now available in console
+  window.socket = socket;
 }

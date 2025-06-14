@@ -9,6 +9,8 @@ import VideoTile from '../components/VideoTile.jsx';
 import RunConsole from '../components/RunConsole';
 import Sidebar from '../components/Sidebar';
 
+const API_BASE = import.meta.env.VITE_API_BASE || '';
+
 const colourFor = (id) =>
   `hsl(${[...id].reduce((h, c) => c.charCodeAt(0) + ((h << 5) - h), 0) % 360},70%,70%)`;
 
@@ -80,10 +82,10 @@ export default function RoomPage() {
     let jobId = '';
     try {
       // Step 1: Trigger backend to start code execution
-      const res = await fetch('http://localhost:3001/api/run', {
+      const res = await fetch(`${API_BASE}/api/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: codeText, language: lang })
+        body: JSON.stringify({ code: codeText, language: lang, room: jobId })
       });
 
       const data = await res.json();
@@ -134,7 +136,7 @@ export default function RoomPage() {
     rec.onstop = async () => {
       const blob = new Blob(chunks, { type: 'video/webm' });
       const { url, key } = await (
-        await fetch('http://localhost:3001/api/presign')
+        await fetch('${API_BASE}/api/presign')
       ).json();
       await fetch(url, {
         method: 'PUT',

@@ -18,7 +18,14 @@ app.use('/api/rooms', roomRoutes);
 /*************************************************************
  * 2. Global middleware
  *************************************************************/
-app.use(cors());
+const corsOptions = {
+  origin: [
+    "http://localhost:5173", 
+    "https://pair-pad.vercel.app"
+  ],
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 /*************************************************************
@@ -70,7 +77,7 @@ const { Server } = require('socket.io');
 const srv = http.createServer(app);
 const roomUsers = new Map();
 const io  = new Server(srv, {
-  cors: { origin: '*' },
+  cors: corsOptions,
 });
 
 app.set('io', io);
