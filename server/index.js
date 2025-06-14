@@ -21,7 +21,7 @@ app.use('/api/rooms', roomRoutes);
 const corsOptions = {
   origin: [
     "http://localhost:5173", 
-    "https://pair-pad.vercel.app"
+    "https://pair-pad-interview.vercel.app"
   ],
   credentials: true,
 };
