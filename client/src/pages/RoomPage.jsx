@@ -85,7 +85,7 @@ export default function RoomPage() {
       const res = await fetch(`${API_BASE}/api/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: codeText, language: lang, room: jobId })
+        body: JSON.stringify({ code: codeText, language: lang})
       });
 
       const data = await res.json();
@@ -136,7 +136,7 @@ export default function RoomPage() {
     rec.onstop = async () => {
       const blob = new Blob(chunks, { type: 'video/webm' });
       const { url, key } = await (
-        await fetch('${API_BASE}/api/presign')
+        await fetch(`${API_BASE}/api/presign`)
       ).json();
       await fetch(url, {
         method: 'PUT',
