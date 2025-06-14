@@ -89,7 +89,7 @@ export default function RoomPage() {
       });
 
       const data = await res.json();
-      jobId = data.jobId; // 🟢 use jobId from backend
+      jobId = data.jobId; 
       console.log('Backend responded with jobId:', jobId);
 
       if (!res.ok) {
@@ -107,7 +107,7 @@ export default function RoomPage() {
     // Step 3: Set up listeners to collect output and exit code
     const handleOutput = ({ type, data }) => {
       console.log('[run-out]', type, data);
-      setOutput(prev => prev + data);
+      setOutput(prev => prev + data + '\n');
     };
     const handleDone = ({ exitCode }) => {
       console.log('[run-done]', exitCode);
