@@ -4,14 +4,14 @@ import Peer from 'simple-peer';
 import { socket } from '../lib/socket';
 
 export default function VideoTile({ roomCode }) {
-  const myVideo   = useRef(null);
-  const remoteVid = useRef(null);
-  const peerRef   = useRef(null);
+  const myVideo    = useRef(null);
+  const remoteVid  = useRef(null);
+  const peerRef    = useRef(null);
 
-  const [ready, setReady]   = useState(false);
-  const [muted, setMuted]   = useState(false);
+  const [ready, setReady] = useState(false);
+  const [muted, setMuted] = useState(false);
 
-  /* ── get camera/mic ───────────────────────── */
+  /* ――― get local media ――― */
   useEffect(() => {
     (async () => {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -24,44 +24,63 @@ export default function VideoTile({ roomCode }) {
     })();
   }, [roomCode]);
 
-  /* ── signalling handlers ──────────────────── */
+  /* ――― signalling ――― */
   useEffect(() => {
-    socket.on('video-ready', ({ from }) => {
+    const onReady = ({ from }) => {
       if (from === socket.id) return;
-      startPeer(true);                       // I’m the initiator
-    });
+      startPeer(true); // I'm initiator
+    };
 
-    socket.on('video-signal', ({ signal, from }) => {
+    const onSignal = ({ signal, from }) => {
       if (from === socket.id) return;
       if (!peerRef.current) startPeer(false);
       peerRef.current.signal(signal);
-    });
+    };
 
+    socket.on('video-ready', onReady);
+    socket.on('video-signal', onSignal);
     return () => {
-      socket.off('video-ready');
-      socket.off('video-signal');
+      socket.off('video-ready', onReady);
+      socket.off('video-signal', onSignal);
       peerRef.current?.destroy();
       peerRef.current = null;
     };
   }, [roomCode]);
 
+  /* ――― peer helper ――― */
   function startPeer(initiator) {
     if (peerRef.current) return;
+
     const stream = myVideo.current.srcObject;
-    const peer   = new Peer({ initiator, trickle: false, stream });
+    const peer   = new Peer({
+      initiator,
+      trickle: false,
+      stream,
+      /* extra STUNs for reliability */
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+          { urls: 'stun:stun3.l.google.com:19302' },
+          { urls: 'stun:stun4.l.google.com:19302' },
+        ],
+      },
+    });
+
     peerRef.current = peer;
 
-    peer.on('signal',  (signal) => {
-      socket.emit('video-signal', { code: roomCode, signal, from: socket.id });
-    });
+    peer.on('signal', (signal) =>
+      socket.emit('video-signal', { code: roomCode, signal, from: socket.id })
+    );
     peer.on('connect', () => setReady(true));
-    peer.on('stream',  (remote) => {
+    peer.on('stream', (remote) => {
       remoteVid.current.srcObject = remote;
       remoteVid.current.play();
     });
   }
 
-  /* ── mute / un-mute ───────────────────────── */
+  /* ――― mic toggle ――― */
   const toggleMute = () => {
     const track = myVideo.current?.srcObject?.getAudioTracks?.()[0];
     if (!track) return;
@@ -69,7 +88,7 @@ export default function VideoTile({ roomCode }) {
     setMuted(!track.enabled);
   };
 
-  /* inline SVG icons */
+  /* icons */
   const MicIcon = (
     <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
       <path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 14 0h-2Zm-5 9a7.002 7.002 0 0 0 6.93-6H17.9A5.002 5.002 0 0 1 12 19a5.002 5.002 0 0 1-5.9-5H5.07A7.002 7.002 0 0 0 12 20Z" />
@@ -82,75 +101,64 @@ export default function VideoTile({ roomCode }) {
     </svg>
   );
 
-  /* client/src/components/VideoTile.jsx */
-/* …imports & logic stay exactly the same… */
-
-return (
-  <div
-    style={{
-      display: 'flex',
-      gap: '1rem',
-      justifyContent: 'center',
-    }}
-  >
-    {/* ── my video ───────────────────────────── */}
-    <div
-      /* give the tile its own box so the button can’t poke out */
-      style={{
-        position: 'relative',
-        width: 200,                // ⬅ explicit width matches video
-        height: 150,               //   (or whatever your camera ratio is)
-        borderRadius: 8,
-        overflow: 'hidden',        // ⬅ keeps button inside the frame
-        border: '2px solid #555',
-      }}
-    >
-      <video
-        ref={myVideo}
-        muted
-        playsInline
-        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-      />
-
-      {/* mic-toggle */}
-      <button
-        onClick={toggleMute}
-        title={muted ? 'Unmute mic' : 'Mute mic'}
+  /* ――― render ――― */
+  return (
+    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+      {/* my video */}
+      <div
         style={{
-          position: 'absolute',
-          top: 6,
-          right: 6,
-          zIndex: 10,              // ⬅ always on top of video
-          background: '#111',
-          border: 'none',
-          borderRadius: '50%',
-          padding: 6,
-          lineHeight: 0,
-          color: muted ? '#f87171' : '#34d399',
-          cursor: 'pointer',
+          position      : 'relative',
+          width         : 200,
+          height        : 150,
+          borderRadius  : 8,
+          overflow      : 'hidden',
+          border        : '2px solid #555',
         }}
       >
-        {muted ? MicOffIcon : MicIcon}
-      </button>
-    </div>
+        <video
+          ref={myVideo}
+          muted
+          playsInline
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
 
-    {/* ── remote video ───────────────────────── */}
-    <div
-      style={{
-        width: 200,
-        height: 150,
-        borderRadius: 8,
-        overflow: 'hidden',
-        border: ready ? '2px solid #4caf50' : '2px dashed #888',
-      }}
-    >
-      <video
-        ref={remoteVid}
-        playsInline
-        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-      />
-    </div>
-  </div>
-);
+        <button
+          onClick={toggleMute}
+          title={muted ? 'Unmute mic' : 'Mute mic'}
+          style={{
+            position   : 'absolute',
+            top        : 6,
+            right      : 6,
+            zIndex     : 10,
+            background : '#111',
+            border     : 'none',
+            borderRadius: '50%',
+            padding    : 6,
+            lineHeight : 0,
+            color      : muted ? '#f87171' : '#34d399',
+            cursor     : 'pointer',
+          }}
+        >
+          {muted ? MicOffIcon : MicIcon}
+        </button>
+      </div>
 
+      {/* remote video */}
+      <div
+        style={{
+          width        : 200,
+          height       : 150,
+          borderRadius : 8,
+          overflow     : 'hidden',
+          border       : ready ? '2px solid #4caf50' : '2px dashed #888',
+        }}
+      >
+        <video
+          ref={remoteVid}
+          playsInline
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      </div>
+    </div>
+  );
 }
